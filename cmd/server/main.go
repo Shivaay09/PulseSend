@@ -64,7 +64,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("database connection failed", zap.Error(err))
 	}
-	defer store.Pool.Close()
+	defer store.Close()
 
 	// ------------------------------------------------
 	// Metrics
@@ -95,9 +95,11 @@ func main() {
 	// Email Sender
 	// ------------------------------------------------
 	sender := &email.Sender{
-		Host: cfg.SMTPHost,
-		Port: cfg.SMTPPort,
-		From: "noreply@pulsesend.com",
+		Host:     cfg.SMTPHost,
+		Port:     cfg.SMTPPort,
+		From:     cfg.SMTPFrom,
+		Username: cfg.SMTPUser,
+		Password: cfg.SMTPPassword,
 	}
 
 	// ------------------------------------------------
@@ -117,9 +119,9 @@ func main() {
 		jobs,
 		sender,
 		limiter,
+		store,  // pass DB to update status
 		logger,
 		cfg.RetryAttempts,
-		store, // pass DB to update status
 	)
 
 	// ------------------------------------------------
@@ -133,14 +135,16 @@ func main() {
 
 	apiMux := http.NewServeMux()
 	apiMux.HandleFunc("/send", apiHandler.SendEmail)
+	apiMux.HandleFunc("/send-bulk", apiHandler.SendBulk)
+	apiMux.HandleFunc("/send-bulk/csv", apiHandler.SendBulkCSV)
 
 	apiServer := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + cfg.APIPort,
 		Handler: apiMux,
 	}
 
 	go func() {
-		logger.Info("api server started", zap.String("port", "8080"))
+		logger.Info("api server started", zap.String("port", cfg.APIPort))
 		if err := apiServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("api server error", zap.Error(err))
 		}

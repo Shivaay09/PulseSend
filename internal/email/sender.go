@@ -14,9 +14,11 @@ import (
 )
 
 type Sender struct {
-	Host string
-	Port int
-	From string
+	Host     string
+	Port     int
+	From     string
+	Username string
+	Password string
 }
 
 // Send renders the template and sends the email
@@ -43,7 +45,7 @@ func (s *Sender) Send(job models.EmailJob) error {
 	m.SetHeader("Subject", job.Subject)
 	m.SetBody("text/html", body.String())
 
-	d := gomail.NewDialer(s.Host, s.Port, "", "")
+	d := gomail.NewDialer(s.Host, s.Port, s.Username, s.Password)
 
 	if err := d.DialAndSend(m); err != nil {
 		return fmt.Errorf("smtp send error: %w", err)

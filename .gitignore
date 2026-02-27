@@ -16,3 +16,10 @@
 
 # Output
 *.out
+
+# Local databases and data
+pulsesend.db
+*.db
+
+# CSV recipient lists (generated/test data)
+recipients.csv

@@ -7,21 +7,21 @@ services:
       - "8080:8080"
       - "9090:9090"
     environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/pulsesend
+      DATABASE_URL: /data/pulsesend.db
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      API_PORT: 8080
+      METRICS_PORT: 9090
     depends_on:
-      - db
       - mailpit
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: pulsesend
-    ports:
-      - "5432:5432"
+    volumes:
+      - app-data:/data
 
   mailpit:
     image: axllent/mailpit
     ports:
       - "1025:1025"
       - "8025:8025"
+
+volumes:
+  app-data: {}
